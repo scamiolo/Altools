@@ -6,4 +6,5 @@ g++ ./bin/coverageAnalyzer/src/*.cpp -o ./bin/coverageAnalyzer/Debug/coverageAna
 g++ ./bin/largeDeletionFinder/src/*.cpp -o ./bin/largeDeletionFinder/Debug/largeDeletionFinder -lm
 g++ ./bin/slidingAnalysis/src/*.cpp -o ./bin/slidingAnalysis/Debug/slidingAnalysis -lm
 g++ ./bin/readsAligner/src/*.cpp -o ./bin/readsAligner/Debug/readsAligner -lm
+prova
 
