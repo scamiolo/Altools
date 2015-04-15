@@ -1,0 +1,434 @@
+//============================================================================
+// Name        : pileupStatistics.cpp
+// Author      : 
+// Version     :
+// Copyright   : Your copyright notice
+// Description : Hello World in C++, Ansi-style
+//============================================================================
+
+#include <iostream>
+#include <fstream>
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <math.h>
+#include <sys/stat.h>
+
+
+
+using namespace std;
+
+//Variables Declaration
+
+int onlyStatistics,baseCutOff,SNPCutOff_snp,mapqCutOff,SNPCutOff_indel;
+int a, i, chromosomeAnalyzed,previousPosition;
+
+
+string inFile, outFile, outputFolder, previousChromosome,chromosome;
+string firstAlleleIndel, secondAlleleIndel;
+char chromosomeName[200][200];
+char nucleotideIndelName[20], nucleotideName[20];
+
+double 	GC_content[100], AT_content[100],coverageATAreas[100],coverageGCAreas[100],nucleotideCounter[100][100];
+double transitionType[100], transversionType[100], homoSNP[100], heteroSNP[100], numIndel[100];
+double numHomoIndel[100], numHeteroIndel[100], numInsertions[100], numDeletions[100];
+double insertionBaseCounter[100][100], deletionBaseCounter[100][100];
+double numSNP[100], chromosomeNotCovered[100],baseMatched[100],chromosomeLength[100];
+
+ifstream inputFile;
+ofstream completePileupFile, outputFile;
+
+struct pileupLine
+{
+	string chromosome, referenceBase, consensusBase, calledBases, calledQualities;
+	int position, callQuality, snpQuality, mapqQuality, depth;
+};
+
+pileupLine readLine;
+
+
+//Funcion declaration
+void initializeVariables(void);
+void includeZeroCoverageInPileup(void);
+void retrieveBaseANDSnpStatistics(void);
+void writeBaseInformatinOnFile(void);
+void outputAnalysisProgress(void);
+void countSNPNucleotides(char nucleotide, int num);
+void checkSnpType(int num);
+void check_GCAT_coverage(int num);
+void checkOmoEteroSNP(int num);
+void openFilesAndFolders(void);
+void retrieveIndelStatistics(void);
+void writeIndelInformatinOnFile(void);
+void countHomoHeteroIndels(int num);
+void elaborateIndelStatistics(int num);
+void countInserionNucleotides(char nucleotide, int num);
+void countDeletionNucleotides(char nucleotide, int num);
+void writeUpOuputFile(void);
+pileupLine readInputFileLine(void);
+
+int main(int argc, char** argv) {
+
+
+	//aquiring data from GUI
+	inFile = argv[1];
+	outFile = argv[2];
+	outputFolder = argv[3];
+	onlyStatistics = strtod(argv[4],NULL);
+	baseCutOff = strtod(argv[5],NULL);
+	SNPCutOff_snp = strtod(argv[6],NULL);
+	mapqCutOff = strtod(argv[7],NULL);
+	SNPCutOff_indel = strtod(argv[8],NULL);
+
+	//initialize variables and streams
+	openFilesAndFolders();
+	initializeVariables();
+
+	//begin input file analysis
+	readLine = readInputFileLine();
+	previousChromosome = readLine.chromosome;
+
+	while(inputFile.eof()== false)
+	{
+		previousPosition=1;
+		chromosomeAnalyzed++;
+		previousChromosome = readLine.chromosome;
+		strcpy(chromosomeName[chromosomeAnalyzed], readLine.chromosome.c_str());
+		cout << "cromosoma analizzato " << readLine.chromosome << " numero cromosoma " << chromosomeAnalyzed << " nome cromosoma " << chromosomeName[chromosomeAnalyzed] <<endl;
+
+		cout<< "Analyzing chromosome " << readLine.chromosome<<"\n";
+		if (onlyStatistics == 0 ) completePileupFile.open((outputFolder + "/pileup/" + readLine.chromosome).c_str());
+
+
+		while(readLine.chromosome==previousChromosome)
+		{
+			if(readLine.position>previousPosition) includeZeroCoverageInPileup(); //there is some 0 coverage not reported in pileup
+			if(readLine.position==previousPosition) retrieveBaseANDSnpStatistics(); //no 0 coverage detected! Retrieve base and snp statistics
+			if(readLine.position<previousPosition) retrieveIndelStatistics(); //indel detected
+
+			previousChromosome = readLine.chromosome;
+			previousPosition = readLine.position + 1;
+			readLine = readInputFileLine();
+			if(previousChromosome != readLine.chromosome) completePileupFile.close();
+		}
+		writeUpOuputFile();
+	}
+
+
+	return 0;
+}
+
+
+
+
+void countInsertionNucleotides(char nucleotide, int num)
+{
+	for(a=0;a<15;a++) if(nucleotideIndelName[a] == nucleotide) insertionBaseCounter[num][a]++;
+}
+
+
+void countDeletionNucleotides(char nucleotide, int num)
+{
+	for(a=0;a<15;a++) if(nucleotideIndelName[a] == nucleotide) deletionBaseCounter[num][a]++;
+}
+
+void elaborateIndelStatistics(int num)
+{
+	if(firstAlleleIndel.at(0)=='+')
+	{
+		for(i=0;i<firstAlleleIndel.length();i++) countInsertionNucleotides(firstAlleleIndel.at(i), num);
+		numInsertions[num]++;
+	}
+
+	if(firstAlleleIndel.at(0)=='-')
+	{
+		for(i=0;i<firstAlleleIndel.length();i++) countDeletionNucleotides(firstAlleleIndel.at(i) , num);
+		numDeletions[num]++;
+	}
+
+
+
+	if(secondAlleleIndel.at(0)=='+')
+	{
+		for(i=0;i<secondAlleleIndel.length();i++) countInsertionNucleotides(secondAlleleIndel.at(i), num);
+		numInsertions[num]++;
+	}
+
+	if(secondAlleleIndel.at(0)=='-')
+	{
+		for(i=0;i<secondAlleleIndel.length();i++) countDeletionNucleotides(secondAlleleIndel.at(i) , num);
+		numDeletions[num]++;
+	}
+}
+
+
+void countHomoHeteroIndels(int num)
+{
+	if ( (firstAlleleIndel == secondAlleleIndel) && (readLine.consensusBase !=  "*/*") && (readLine.callQuality>=baseCutOff) && (readLine.snpQuality >= SNPCutOff_snp) && (readLine.mapqQuality >= mapqCutOff) ) numHomoIndel[num]++;
+	if ( (firstAlleleIndel != secondAlleleIndel) && (readLine.consensusBase !=  "*/*") && (readLine.callQuality>=baseCutOff) && (readLine.snpQuality >= SNPCutOff_snp) && (readLine.mapqQuality >= mapqCutOff) ) numHeteroIndel[num]++;
+}
+
+
+void writeIndelInformatinOnFile(void)
+{
+	if ( (readLine.consensusBase != "*/*") && (readLine.callQuality>=baseCutOff) && (readLine.snpQuality >= SNPCutOff_snp) && (readLine.mapqQuality >= mapqCutOff) )
+	{
+		completePileupFile.seekp(-2,fstream::cur);
+		completePileupFile << "1\n";
+	}
+}
+
+
+void retrieveIndelStatistics(void)
+{
+	if(onlyStatistics==0) writeIndelInformatinOnFile();
+	if( (readLine.consensusBase!="*/*") && (readLine.callQuality>=baseCutOff) && (readLine.snpQuality >= SNPCutOff_snp) && (readLine.mapqQuality >= mapqCutOff) ) numIndel[chromosomeAnalyzed]++;
+	firstAlleleIndel = readLine.consensusBase.substr(0, readLine.consensusBase.find_first_of('/'));
+	secondAlleleIndel = readLine.consensusBase.substr(readLine.consensusBase.find_first_of('/')+1, readLine.consensusBase.length() ) ;
+	countHomoHeteroIndels(chromosomeAnalyzed);
+	elaborateIndelStatistics(chromosomeAnalyzed);
+}
+
+
+
+
+void openFilesAndFolders()
+{
+	inputFile.open(inFile.c_str());
+	if (onlyStatistics == 0 ) mkdir( (outputFolder + "/pileup").c_str(), 0777);
+}
+
+void writeBaseInformatinOnFile(void)
+{
+	if ((readLine.callQuality>=baseCutOff) && (readLine.snpQuality >= SNPCutOff_snp) && (readLine.mapqQuality >= mapqCutOff) )
+	{
+		completePileupFile << readLine.position << "\t" << readLine.depth << "\t";
+		if(readLine.referenceBase.at(0)!= readLine.consensusBase.at(0)) completePileupFile << "1\t0\n";
+		else
+		{
+			if(readLine.referenceBase.at(0)=='*') completePileupFile << "0\t1\n";
+			else completePileupFile << "0\t0\n";
+		}
+	}
+	else completePileupFile << readLine.position << "\t" << readLine.depth << "\t0\t0\n";
+}
+
+
+void outputAnalysisProgress(void)
+{
+	if(fmod(baseMatched[chromosomeAnalyzed],100000.0)==0) cout << (int)baseMatched[chromosomeAnalyzed] << " bases analyzed on chromosome " << readLine.chromosome << endl;
+}
+
+
+void countSNPNucleotides(char nucleotide, int num)
+{
+	for(a=0;a<15;a++) if(nucleotideName[a] == nucleotide) nucleotideCounter[num][a]++;
+
+}
+
+void checkSnpType(int num)
+{
+	if((readLine.callQuality>=baseCutOff) && (readLine.snpQuality >= SNPCutOff_snp) && (readLine.mapqQuality >= mapqCutOff))
+	{
+		if(readLine.referenceBase.at(0)=='A')
+		{
+			if(readLine.consensusBase.at(0)=='G' || readLine.consensusBase.at(0)=='R') transitionType[num]++;
+			if(readLine.consensusBase.at(0)=='C' || readLine.consensusBase.at(0)=='T' || readLine.consensusBase.at(0)=='Y') transversionType[num]++;
+		}
+
+
+		if(readLine.referenceBase.at(0)=='G')
+		{
+			if(readLine.consensusBase.at(0)=='A' || readLine.consensusBase.at(0)=='R') transitionType[num]++;
+			if(readLine.consensusBase.at(0)=='C' || readLine.consensusBase.at(0)=='T' || readLine.consensusBase.at(0)=='Y') transversionType[num]++;
+		}
+
+
+		if(readLine.referenceBase.at(0)=='C')
+		{
+			if(readLine.consensusBase.at(0)=='T' || readLine.consensusBase.at(0)=='Y') transitionType[num]++;
+			if(readLine.consensusBase.at(0)=='A' || readLine.consensusBase.at(0)=='G' || readLine.consensusBase.at(0)=='R') transversionType[num]++;
+		}
+
+		if(readLine.referenceBase.at(0)=='T')
+		{
+			if(readLine.consensusBase.at(0)=='C' || readLine.consensusBase.at(0)=='Y') transitionType[num]++;
+			if(readLine.consensusBase.at(0)=='A' || readLine.consensusBase.at(0)=='G' || readLine.consensusBase.at(0)=='R') transversionType[num]++;
+		}
+	}
+}
+
+void check_GCAT_coverage(int num)
+{
+	if(readLine.referenceBase.at(0)=='G' || readLine.referenceBase.at(0)=='C')
+	{
+		GC_content[num]++;
+		coverageGCAreas[num] = coverageGCAreas[num] + readLine.depth;
+	}
+	if(readLine.referenceBase.at(0)=='A' || readLine.referenceBase.at(0)=='T')
+	{
+		AT_content[num]++;
+		coverageATAreas[num] = coverageATAreas[num] + readLine.depth;
+	}
+}
+
+
+void checkOmoEteroSNP(int num)
+{
+	if ( (readLine.consensusBase.at(0)=='A' || readLine.consensusBase.at(0)=='G' || readLine.consensusBase.at(0)=='C' || readLine.consensusBase.at(0)=='T') && (readLine.callQuality>=baseCutOff) && (readLine.snpQuality >= SNPCutOff_snp) && (readLine.mapqQuality >= mapqCutOff) ) homoSNP[num]++;
+	if ( (readLine.consensusBase.at(0)!='A' && readLine.consensusBase.at(0)!='G' && readLine.consensusBase.at(0)!='C' && readLine.consensusBase.at(0)!='T') && (readLine.callQuality>=baseCutOff) && (readLine.snpQuality >= SNPCutOff_snp) && (readLine.mapqQuality >= mapqCutOff) ) heteroSNP[num]++;
+}
+
+void retrieveBaseANDSnpStatistics(void)
+{
+	if(onlyStatistics==0) writeBaseInformatinOnFile();
+
+	baseMatched[chromosomeAnalyzed]++;
+
+	outputAnalysisProgress();
+	chromosomeLength[chromosomeAnalyzed]++;
+
+	//if a snp is detected
+	if( (readLine.referenceBase.at(0)!=readLine.consensusBase.at(0)) && (readLine.callQuality>=baseCutOff) && (readLine.snpQuality >= SNPCutOff_snp) && (readLine.mapqQuality >= mapqCutOff))
+	{
+		numSNP[chromosomeAnalyzed]++;
+
+		countSNPNucleotides(readLine.consensusBase.at(0),chromosomeAnalyzed);
+		checkSnpType(chromosomeAnalyzed);
+		check_GCAT_coverage(chromosomeAnalyzed);
+		checkOmoEteroSNP(chromosomeAnalyzed);
+	}
+}
+
+
+
+void includeZeroCoverageInPileup(void)
+{
+	for(a=previousPosition;a<=readLine.position;a++)
+	{
+		if(onlyStatistics==0) completePileupFile << a << "\t0\t0\t0\n";
+		chromosomeLength[chromosomeAnalyzed]++;
+		chromosomeNotCovered[chromosomeAnalyzed]++;
+	}
+}
+
+
+
+
+
+
+pileupLine readInputFileLine()
+{
+	pileupLine line;
+	inputFile >> line.chromosome >> line.position >> line.referenceBase >> line.consensusBase >> line.callQuality >> line.snpQuality >> line.mapqQuality >> line.depth >> line.calledBases >>line.calledQualities;
+	inputFile.ignore(1000000,'\n'); //in case of indel get to the end of the read line
+	return line;
+}
+
+
+void initializeVariables(void)
+{
+
+	inputFile >> previousChromosome;
+	chromosome = previousChromosome;
+	inputFile.seekg(0,fstream::beg);
+	chromosomeAnalyzed=0;
+
+
+	for(a=0;a<100;a++)
+	{
+		GC_content[a]=0;
+		AT_content[a]=0;
+		coverageATAreas[a]=0;
+		coverageGCAreas[a]=0;
+		transitionType[a]=0;
+		transversionType[a]=0;
+		homoSNP[a]=0;
+		heteroSNP[a]=0;
+		chromosomeLength[a]=0;
+		chromosomeNotCovered[a]=0;
+		numSNP[a]=0;
+		baseMatched[a]=0;
+		numIndel[a]=0;
+		numHomoIndel[a]=0;
+		numHeteroIndel[a]=0;
+		numInsertions[a]=0;
+		numDeletions[a]=0;
+
+		for(i=0;i<100;i++)
+			{
+				nucleotideCounter[a][i]=0;
+				insertionBaseCounter[a][i]=0;
+				deletionBaseCounter[a][i]=0;
+			}
+	}
+
+	nucleotideName[0]='A';
+	nucleotideName[1]='G';
+	nucleotideName[2]='C';
+	nucleotideName[3]='T';
+	nucleotideName[4]='N';
+	nucleotideName[5]='R';
+	nucleotideName[6]='Y';
+	nucleotideName[7]='M';
+	nucleotideName[8]='S';
+	nucleotideName[9]='W';
+	nucleotideName[10]='K';
+	nucleotideName[11]='V';
+	nucleotideName[12]='D';
+	nucleotideName[13]='H';
+	nucleotideName[14]='B';
+
+	nucleotideIndelName[0]='A';
+	nucleotideIndelName[1]='G';
+	nucleotideIndelName[2]='C';
+	nucleotideIndelName[3]='T';
+	nucleotideIndelName[4]='N';
+	nucleotideIndelName[5]='R';
+	nucleotideIndelName[6]='Y';
+	nucleotideIndelName[7]='M';
+	nucleotideIndelName[8]='S';
+	nucleotideIndelName[9]='W';
+	nucleotideIndelName[10]='K';
+	nucleotideIndelName[11]='V';
+	nucleotideIndelName[12]='D';
+	nucleotideIndelName[13]='H';
+	nucleotideIndelName[14]='B';
+}
+
+void writeUpOuputFile(void)
+{
+	//write up general statistics
+	cout.precision(5);
+	outputFile.open( (outputFolder + outFile).c_str() );
+	outputFile << "General Statistics" << endl <<"Chromosome name\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << chromosomeName[a] << "\t";
+	outputFile<<endl<<"Chromosome length(bp)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << fixed << chromosomeLength[a] << "\t";
+	outputFile<<endl<<"Chromosome not covered (%)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (chromosomeNotCovered[a]/chromosomeLength[a])*100 << "\t";
+	outputFile<<endl<<"Total Number of SNPs(/bp matched*1000)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (numSNP[a]/baseMatched[a])*1000 << "\t";
+	outputFile<<endl<<"Number of homozigous SNPs(/bp matched*1000)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (homoSNP[a]/baseMatched[a])*1000 << "\t";
+	outputFile<<endl<<"Number of heterozigous SNPs(/bp matched*1000)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (heteroSNP[a]/baseMatched[a])*1000 << "\t";
+	outputFile<<endl<<"Total Number of insertions(/bp matched*1000)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (numInsertions[a]/baseMatched[a])*1000 << "\t";
+	outputFile<<endl<<"Total Number of deletions(/bp matched*1000)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (numDeletions[a]/baseMatched[a])*1000 << "\t";
+	outputFile<<endl<<"Number of homozigous indels(/bp matched*1000)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (numHomoIndel[a]/baseMatched[a])*1000 << "\t";
+	outputFile<<endl<<"Number of heterozigous indels(/bp matched*1000)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (numHeteroIndel[a]/baseMatched[a])*1000 << "\t";
+	outputFile<<endl<<"Average coverage in GC areas(n. reads)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (coverageGCAreas[a]/GC_content[a]) << "\t";
+	outputFile<<endl<<"Average coverage in AT areas(n. reads)\t";
+	for (a=1;a<=chromosomeAnalyzed;a++) outputFile << (coverageATAreas[a]/AT_content[a]) << "\t";
+
+
+	outputFile.close();
+
+}

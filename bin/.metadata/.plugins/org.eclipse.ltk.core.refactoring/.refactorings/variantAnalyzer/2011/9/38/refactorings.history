@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;variantAnalyzer/src/alToolsStructures&apos; to &apos;alToolsStructures.h&apos;" description="Rename resource &apos;alToolsStructures&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/alToolsStructures" name="alToolsStructures.h" stamp="1315822927253" updateReferences="true"/>
+</session>

@@ -1,0 +1,16 @@
+
+**** Build of configuration Debug for project variantAnalyzer ****
+
+make all 
+Building file: ../src/variantAnalyzer.cpp
+Invoking: GCC C++ Compiler
+g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/variantAnalyzer.d" -MT"src/variantAnalyzer.d" -o "src/variantAnalyzer.o" "../src/variantAnalyzer.cpp"
+Finished building: ../src/variantAnalyzer.cpp
+ 
+Building target: variantAnalyzer
+Invoking: GCC C++ Linker
+g++  -o "variantAnalyzer"  ./src/gff3Analyzer.o ./src/multiFastaAnalyzer.o ./src/variantAnalyzer.o   
+Finished building target: variantAnalyzer
+ 
+
+**** Build Finished ****

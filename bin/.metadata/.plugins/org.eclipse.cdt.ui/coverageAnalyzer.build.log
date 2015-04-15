@@ -1,0 +1,18 @@
+
+**** Build of configuration Debug for project coverageAnalyzer ****
+
+make all 
+Building file: ../src/coverageAnalyzer.cpp
+Invoking: GCC C++ Compiler
+g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/coverageAnalyzer.d" -MT"src/coverageAnalyzer.d" -o "src/coverageAnalyzer.o" "../src/coverageAnalyzer.cpp"
+../src/coverageAnalyzer.cpp: In function ‘void reportZeroCoverageAreas()’:
+../src/coverageAnalyzer.cpp:198:6: warning: unused variable ‘zeroCoverageDetected’ [-Wunused-variable]
+Finished building: ../src/coverageAnalyzer.cpp
+ 
+Building target: coverageAnalyzer
+Invoking: GCC C++ Linker
+g++  -o "coverageAnalyzer"  ./src/coverageAnalyzer.o   
+Finished building target: coverageAnalyzer
+ 
+
+**** Build Finished ****

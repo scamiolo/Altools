@@ -1,0 +1,29 @@
+largeDeletionFinder.cpp
+
+this tools will look for large deleted areas based on the simple alignment of paired-end short reads on a reference genome. It uses a sam format alignment file and check whether the insert within the paired end reads is compatible with the expectation. When this insert is bigger than a certain cutoff a deletion is called. Moreover, since a deletion can be either homo or heterozigous this tools can also perfor a coverage analysis within the found deletion areas. When the coverage is very low that the deletion will be likely to be homozigous (the opposite will probably testify a heterozigous deletion)
+
+Syntax
+./largeDeletionFinder inputDirectory minimumShortInsert maximumShortInsert minimumLongInsert maximumLongInsert 	distanceToCollapseIndel performCoverageAnalysis outputFileSuffix pileupFolder generateGEFile minimumNumberOfReadsToConfirmIndel MaxCoverageInIndel
+
+Arguments:
+
+inputDirecotry: it is the path were the alignment sam formatted files are located. All the sam file present in the directory will be elaborated
+
+minimumShortInsert and maximumShortInsert: they define the range used in order to call an insertion, i.e. when the found insert is shorter than expected (e.g. when their values are 0 and 50 respectively then an insertion is called when the paired end insert is between 0 and 50).
+
+minimumLongInsert and maximumLongInsert: they define the range used in order to call an deletions, i.e. when the found insert is longer than expected (e.g. when their values are 1000 and 10000 respectively then a deltion is called when the paired end insert is between 1000 and 10000).
+
+distanceToCollapseIndel: it define when the information coming from the two distinct couple of paired end reads can be collapsed (e.g. they testify the same deletion) 
+
+performCoverageAnalysis: when it is set to 1 then a coverage analysis will be performed on the found deletions
+
+outputFileSuffix: it is the suffix that will be used for the output files.
+
+pileupFolder: it is the pileup folder for the studied organism that was created using the Altools script pileupAnalysis and it will be used if the coverage analysis is previously set.
+
+generateGEFile: generate "genic extracor" files that can be open by the Altools script genicExtractor in order to verify whether the found deletions host some functional gene.
+
+minimumNumberOfReadsToConfirmIndel: it says to the software how many paired end reads must indicate a deletion in order for the deletion to be reported in the output file. 
+
+MaxCoverageInIndel: it says to the software the deletion average coverage above which the deletion is not reported in the output file (e.g. choosing a low value will allow the identification of only the homozigous deletions)
+

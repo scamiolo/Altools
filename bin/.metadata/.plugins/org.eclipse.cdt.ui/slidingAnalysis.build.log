@@ -1,0 +1,16 @@
+
+**** Build of configuration Debug for project slidingAnalysis ****
+
+make all 
+Building file: ../src/slidingAnalysis.cpp
+Invoking: GCC C++ Compiler
+g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/slidingAnalysis.d" -MT"src/slidingAnalysis.d" -o "src/slidingAnalysis.o" "../src/slidingAnalysis.cpp"
+Finished building: ../src/slidingAnalysis.cpp
+ 
+Building target: slidingAnalysis
+Invoking: GCC C++ Linker
+g++  -o "slidingAnalysis"  ./src/slidingAnalysis.o   
+Finished building target: slidingAnalysis
+ 
+
+**** Build Finished ****

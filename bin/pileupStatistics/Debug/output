@@ -1,0 +1,43 @@
+General Statistics
+Chromosome name	chr1	chr2	
+Chromosome length(bp)	23023951	18777684	
+Chromosome not covered (%)	52.57	58.78	
+Total Number of SNPs(/bp matched*1000)	254.96	282.75	
+Number of homozigous SNPs(/bp matched*1000)	0.76	0.84	
+Number of heterozigous SNPs(/bp matched*1000)	254.20	281.90	
+Total Number of insertions(/bp matched*1000)	0.12	0.12	
+Total Number of deletions(/bp matched*1000)	0.12	0.13	
+Number of homozigous indels(/bp matched*1000)	0.14	0.14	
+Number of heterozigous indels(/bp matched*1000)	0.10	0.11	
+Average coverage in GC areas(n. reads)	4.72	4.54	
+Average coverage in AT areas(n. reads)	4.78	4.61	
+
+SNP base statistics
+Number of transitions (/snp *100)	0.23	0.23	
+Number of transversions (/snp *100)	0.10	0.09	
+A content (num. SNP)	0.00	0.00	
+G content (num. SNP)	0.00	0.00	
+C content (num. SNP)	0.00	0.00	
+T content (num. SNP)	0.00	0.00	
+N content (num. SNP)	1.00	1.00	
+R content (num. SNP)	0.00	0.00	
+Y content (num. SNP)	0.00	0.00	
+M content (num. SNP)	0.00	0.00	
+S content (num. SNP)	0.00	0.00	
+W content (num. SNP)	0.00	0.00	
+K content (num. SNP)	0.00	0.00	
+V content (num. SNP)	0.00	0.00	
+D content (num. SNP)	0.00	0.00	
+H content (num. SNP)	0.00	0.00	
+B content (num. SNP)	0.00	0.00	
+
+
+Indel base statistics
+Deletion A content (/num of deletions)	0.56	0.53	
+Deletion G content (/num of deletions)	0.21	0.18	
+Deletion C content (/num of deletions)	0.19	0.18	
+Deletion T content (/num of deletions)	0.58	0.61	
+Insertion A content (/num of Insertions)	0.52	0.60	
+Insertion G content (/num of Insertions)	0.21	0.21	
+Insertion C content (/num of Insertions)	0.19	0.21	
+Insertion T content (/num of Insertions)	0.55	0.50	

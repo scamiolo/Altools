@@ -1,0 +1,20 @@
+slidingAnalysis.cpp
+
+This tool performs a sliding/adjacent window analysis on coverage, snp and indel along the chromosomes
+
+Syntax:
+./slidingAnalysis pileupFolderName outputFolder windowSize windowStep cutOff verbose
+
+pileupFolderName: the path of the pileup folder of the studied organism
+
+outputFolder: the folder where the sliding/adjacent windows will be reported
+
+windowSize: the size of the windows in bp
+
+windowStep: the step of the windows in bp (if windowSize = windowStep an adjacent window analysis will be performed)
+
+cutoff: minimum coverage to call a base
+
+verbose: when it is 1 a verbose output will be generated
+
+

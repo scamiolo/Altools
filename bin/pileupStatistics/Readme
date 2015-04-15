@@ -1,0 +1,40 @@
+pileupStatistics.c
+
+This tool is used in order to achieve two tasks:
+1) a pileup folder is created that can be used as input for other Altools scripts. Such a folder contains a text file for each chromosome where 4 columns report the position, coverage, snp presence/absence, indel presence/absence.
+2) generate a table with general statistics for each chromosome. 
+Identification of statistical evident polymorphysms is achieved by the embedded varscan tool. This script take as input file a pileup file generated with samtools mpileup (standard output)
+
+Syntax:
+
+./pileupStatistics inFile outFile outputFolder onlyStatistics averageQuality minimumVariantFrequency referenceMinimumCoverage snpMinimumCoverage snpMinimumReads 	variantPValue	indelMinimumCoverage indelMinimumReads 
+
+Arguments:
+
+inFile: the samtools pileup file
+
+outFile: name of the output file where the general statitics will be reported
+
+outputFolder: the folder where the chromosome informations will be stored (called pileup folder)
+
+onlyStatistics: if it is set to 1 then only the statistics will be calculated (no pileup folder will be generated)
+
+averageQuality: average quality cutoff for varscan to call snp and indel
+
+minimumVariantFrequency: minimum variant allele frequency for a snp or indel to be called (with varscan)
+
+referenceMinimumCoverage: minimum coverage for a base to be called (with varscan)
+
+snpMinimumCoverage: minimum coverage for a snp to be called (with varscan)
+
+snpMinimumReads: minimum number of reads confirming the snp (with varscan)
+
+variantPValue: pValue cutoff for snp and indel calling (with varscan)
+
+indelMinimumCoverage:  minimum coverage for a indel to be called (with varscan)
+
+indelMinimumReads:minimum number of reads confirming the indel (with varscan)
+
+Nore: the gui may be not perfectly linked to this script right now.....
+
+

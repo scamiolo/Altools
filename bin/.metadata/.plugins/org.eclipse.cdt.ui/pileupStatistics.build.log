@@ -1,0 +1,23 @@
+
+**** Build of configuration Debug for project pileupStatistics ****
+
+make all 
+Building file: ../src/pileupStatistics.cpp
+Invoking: GCC C++ Compiler
+g++ -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/pileupStatistics.d" -MT"src/pileupStatistics.d" -o "src/pileupStatistics.o" "../src/pileupStatistics.cpp"
+../src/pileupStatistics.cpp: In function ‘void elaborateIndelStatistics(int)’:
+../src/pileupStatistics.cpp:223:70: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+../src/pileupStatistics.cpp:224:70: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+../src/pileupStatistics.cpp:228:70: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+../src/pileupStatistics.cpp:229:70: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+../src/pileupStatistics.cpp:230:71: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+../src/pileupStatistics.cpp:231:71: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+Finished building: ../src/pileupStatistics.cpp
+ 
+Building target: pileupStatistics
+Invoking: GCC C++ Linker
+g++  -o "pileupStatistics"  ./src/pileupStatistics.o   
+Finished building target: pileupStatistics
+ 
+
+**** Build Finished ****
